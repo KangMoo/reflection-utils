@@ -1,7 +1,7 @@
 # Reflection Util
 reflection-util is for invoke Plain Java expression text.
 
-The purpose is to execute a simple expression during runtime.
+The purpose is to execute a simple method call expression during runtime.
 
 
 
