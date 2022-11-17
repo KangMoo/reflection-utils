@@ -6,6 +6,7 @@ import com.github.javaparser.ast.expr.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.function.BinaryOperator;
 import java.util.stream.IntStream;
 
 /**
@@ -40,7 +41,62 @@ public class ReflectionUtil {
             return new TypeValuePair(boolean.class, expr.asBooleanLiteralExpr().getValue());
         } else if (expr.isStringLiteralExpr()) {
             return new TypeValuePair(String.class, expr.asStringLiteralExpr().asString());
+        } else if (expr.isBinaryExpr()) {
+            return execBinaryExpr(expr.asBinaryExpr());
         }
+        return null;
+    }
+
+    public static TypeValuePair execBinaryExpr(BinaryExpr binaryExpr) throws Exception {
+        TypeValuePair left = exec(binaryExpr.getLeft().toString());
+        TypeValuePair right = exec(binaryExpr.getRight().toString());
+        String operator = binaryExpr.getOperator().asString();
+        if (operator.equals("==")) {
+            return new TypeValuePair(boolean.class, (left.value == right.value));
+        } else if (operator.equals("!=")) {
+            return new TypeValuePair(boolean.class, (left.value != right.value));
+        } else if (operator.equals("||")) {
+            return new TypeValuePair(boolean.class, ((Boolean) left.value && (Boolean) right.value));
+        } else if (operator.equals("&&")) {
+            return new TypeValuePair(boolean.class, ((Boolean) left.value && (Boolean) right.value));
+        }
+
+        if (operator.equals("|")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value | (Long) right.value)));
+        } else if (operator.equals("&")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value & (Long) right.value)));
+        } else if (operator.equals("^")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value ^ (Long) right.value)));
+        } else if (operator.equals("<<")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value << (Long) right.value)));
+        } else if (operator.equals(">>")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value >> (Long) right.value)));
+        } else if (operator.equals(">>>")) {
+            return new TypeValuePair(left.type, left.type.cast(((Long) left.value >>> (Long) right.value)));
+        } else if (operator.equals("<")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value < (Double) right.value)));
+        } else if (operator.equals(">")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value > (Double) right.value)));
+        } else if (operator.equals("<=")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value <= (Double) right.value)));
+        } else if (operator.equals(">=")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value >= (Double) right.value)));
+        } else if (operator.equals("+")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value + (Double) right.value)));
+        } else if (operator.equals("-")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value - (Double) right.value)));
+        } else if (operator.equals("*")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value * (Double) right.value)));
+        } else if (operator.equals("/")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value / (Double) right.value)));
+        } else if (operator.equals("%")) {
+            return new TypeValuePair(left.type, left.type.cast(((Double) left.value % (Double) right.value)));
+        }
+        return null;
+    }
+
+    public static TypeValuePair execBinaryExpr(TypeValuePair left, TypeValuePair right, String operator) throws Exception {
+
         return null;
     }
 
@@ -88,12 +144,12 @@ public class ReflectionUtil {
     public static TypeValuePair execFieldAccessExpr(FieldAccessExpr fieldAccessExpr) throws Exception {
         try {
             return new TypeValuePair(Class.forName(fieldAccessExpr.toString()), null);
-        } catch (Exception ignored){
+        } catch (Exception ignored) {
         }
         TypeValuePair object;
         try {
             object = new TypeValuePair(Class.forName(fieldAccessExpr.getScope().toString()), null);
-        } catch (Exception e2){
+        } catch (Exception e2) {
             object = exec(fieldAccessExpr.getScope().toString());
         }
         Field field = object.type.getDeclaredField(fieldAccessExpr.getNameAsString());
